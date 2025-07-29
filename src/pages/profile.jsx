@@ -17,6 +17,30 @@ import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import PersonIcon from "@mui/icons-material/Person";
 
+// Helper: calculate age as of today from a "DD/MM/YYYY" string
+function getAgeFromDOB(dobStr) {
+  if (!dobStr || !dayjs(dobStr, "DD/MM/YYYY", true).isValid()) return "";
+  const dob = dayjs(dobStr, "DD/MM/YYYY");
+  const today = dayjs();
+  let age = today.year() - dob.year();
+  if (
+    today.month() < dob.month() ||
+    (today.month() === dob.month() && today.date() < dob.date())
+  ) {
+    age--; // birthday not passed this year
+  }
+  return age > 0 ? String(age) : "";
+}
+
+// Helper: get DOB string for a given age, defaulting to today's month/day
+function getDOBFromAge(age) {
+  const n = Number(age);
+  if (!n || n <= 0) return "";
+  const today = dayjs();
+  // Use today's month and day for DOB for greatest age accuracy
+  return today.subtract(n, "year").format("DD/MM/YYYY");
+}
+
 function stringAvatar(name) {
   if (!name) return { children: null };
   const parts = name.trim().split(" ");
@@ -31,13 +55,12 @@ function stringAvatar(name) {
 const EMAIL_VALIDATION_API_KEY = "21686e30d21542a1849db28cda4ea88d"; // Your API key here
 
 async function validateEmailAPI(email) {
-  const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${EMAIL_VALIDATION_API_KEY}&email=${encodeURIComponent(email)}`;
-
+  const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${EMAIL_VALIDATION_API_KEY}&email=${encodeURIComponent(
+    email
+  )}`;
   const response = await fetch(url);
   if (!response.ok) throw new Error("API request failed");
-
   const data = await response.json();
-  // Abstract API returns a "deliverability" field. Valid if === "DELIVERABLE".
   return data.deliverability === "DELIVERABLE";
 }
 
@@ -56,6 +79,33 @@ function Profile() {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
 
+  // Handler for DOB field
+  const handleDOBChange = (date) => {
+    let dobString = "";
+    if (date && dayjs(date).isValid()) {
+      dobString = dayjs(date).format("DD/MM/YYYY");
+    }
+    const newAge = getAgeFromDOB(dobString);
+    setFormData((prev) => ({
+      ...prev,
+      dob: dobString,
+      age: newAge,
+    }));
+  };
+
+  // Handler for Age field
+  const handleAgeChange = (e) => {
+    const val = e.target.value;
+    let numericAge = val.replace(/\D/g, "");
+    if (numericAge.length > 3) numericAge = numericAge.slice(0, 3);
+    const dobString = getDOBFromAge(numericAge);
+    setFormData((prev) => ({
+      ...prev,
+      age: numericAge,
+      dob: dobString,
+    }));
+  };
+
   const validate = async () => {
     const newErrors = {};
 
@@ -63,18 +113,37 @@ function Profile() {
       newErrors.name = "Name is required";
     }
 
-    if (!formData.age || isNaN(formData.age) || formData.age <= 0) {
+    // Validate Age
+    if (!formData.age || isNaN(formData.age) || Number(formData.age) <= 0) {
       newErrors.age = "Valid age required";
     }
 
-    // Basic regex for format first
+    // Validate DOB
+    if (
+      !formData.dob ||
+      !dayjs(formData.dob, "DD/MM/YYYY", true).isValid() ||
+      dayjs(formData.dob, "DD/MM/YYYY").isAfter(dayjs())
+    ) {
+      newErrors.dob = "Valid past date required (DD/MM/YYYY)";
+    }
+
+    // Validate Age-DOB sync
+    if (
+      !newErrors.age &&
+      !newErrors.dob &&
+      getAgeFromDOB(formData.dob) !== String(Number(formData.age))
+    ) {
+      newErrors.age = "Age and DOB mismatch";
+      newErrors.dob = "Age and DOB mismatch";
+    }
+
+    // Validate Email
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!formData.email) {
       newErrors.email = "Email is required";
     } else if (!emailRegex.test(formData.email)) {
       newErrors.email = "Enter a valid email format";
     } else {
-      // Now check with Abstract API
       setCheckingEmail(true);
       try {
         const emailValid = await validateEmailAPI(formData.email);
@@ -88,18 +157,12 @@ function Profile() {
       setCheckingEmail(false);
     }
 
+    // Validate phone
     if (!formData.phone || !/^\d{10}$/.test(formData.phone)) {
       newErrors.phone = "Valid 10-digit phone required";
     }
 
-    if (
-      !formData.dob ||
-      !dayjs(formData.dob, "DD/MM/YYYY", true).isValid() ||
-      dayjs(formData.dob, "DD/MM/YYYY").isAfter(dayjs())
-    ) {
-      newErrors.dob = "Valid past date required (DD/MM/YYYY)";
-    }
-
+    // Validate gender
     if (!formData.gender) {
       newErrors.gender = "Gender is required";
     }
@@ -109,14 +172,14 @@ function Profile() {
   };
 
   const handleSubmit = async () => {
-    if (checkingEmail) return; // prevent multiple submits while checking email
-
+    if (checkingEmail) return;
     const isValid = await validate();
     if (isValid) {
       let profiles = JSON.parse(localStorage.getItem("userProfiles") || "[]");
       profiles.push({
         ...formData,
         dob: formData.dob,
+        age: formData.age,
       });
       localStorage.setItem("userProfiles", JSON.stringify(profiles));
       setOpenSnackbar(true);
@@ -127,8 +190,11 @@ function Profile() {
     }
   };
 
-  // Styles (unchanged so your UI looks the same)
-  const fieldSx = { mb: 2, bgcolor: "#f5f5f5", "& .MuiInputBase-root": { height: 50 } };
+  const fieldSx = {
+    mb: 2,
+    bgcolor: "#f5f5f5",
+    "& .MuiInputBase-root": { height: 50 }
+  };
   const labelSx = { fontSize: 18 };
 
   return (
@@ -140,18 +206,18 @@ function Profile() {
         alignItems: "center",
         justifyContent: "center",
         py: 6,
+        px: { xs: 2, sm: 4 },
       }}
     >
       <Card
         elevation={10}
         sx={{
           borderRadius: 4,
-          minWidth: 330,
+          width: { xs: "95%", sm: 420 },
           maxWidth: 420,
           bgcolor: "#fff",
           px: { xs: 2, sm: 4 },
           py: { xs: 2, sm: 3 },
-          width: "100%",
         }}
       >
         <CardContent sx={{ pb: 1 }}>
@@ -220,7 +286,7 @@ function Profile() {
                   type="number"
                   fullWidth
                   value={formData.age}
-                  onChange={e => setFormData({ ...formData, age: e.target.value })}
+                  onChange={handleAgeChange}
                   error={!!errors.age}
                   helperText={errors.age || ""}
                   autoComplete="off"
@@ -232,14 +298,7 @@ function Profile() {
                 <DatePicker
                   label="Date of Birth"
                   value={formData.dob ? dayjs(formData.dob, "DD/MM/YYYY") : null}
-                  onChange={date => {
-                    setFormData({
-                      ...formData,
-                      dob: date && dayjs(date).isValid()
-                        ? dayjs(date).format("DD/MM/YYYY")
-                        : "",
-                    });
-                  }}
+                  onChange={handleDOBChange}
                   format="DD/MM/YYYY"
                   slotProps={{
                     textField: {

@@ -34,7 +34,6 @@ function UsersTable() {
   const [rowsPerPage, setRowsPerPage] = useState(6);
 
   useEffect(() => {
-    // Load users strictly from localStorage, no external fetch to avoid network errors
     setLoading(true);
     setError(null);
 
@@ -53,7 +52,6 @@ function UsersTable() {
         }
       }
 
-      // Map profiles to user-format
       const profileUsers = profiles.map((profile, idx) =>
         profileToUser(profile, idx)
       );
@@ -72,7 +70,6 @@ function UsersTable() {
     setPage(0);
   };
 
-  // Slice users for pagination
   const visibleRows = users.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage
@@ -96,8 +93,8 @@ function UsersTable() {
   }
 
   return (
-    <Paper sx={{ width: "100%", overflow: "hidden", mt: 3 }}>
-      <TableContainer sx={{ maxHeight: 440 }}>
+    <Paper sx={{ width: "100%", overflowX: "auto", mt: 3 }}>
+      <TableContainer sx={{ maxHeight: 440, overflowX: "auto" }}>
         <Table stickyHeader aria-label="users table">
           <TableHead>
             <TableRow>

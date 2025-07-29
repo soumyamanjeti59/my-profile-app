@@ -40,16 +40,17 @@ function Home() {
   if (!profile) {
     return (
       <Container
-        maxWidth="M"
+        maxWidth="md"
         sx={{
           minHeight: "90vh",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           bgcolor: "#123d7d",
+          px: { xs: 2, sm: 4 },
         }}
       >
-        <Box width="50%">
+        <Box width={{ xs: "100%", sm: "50%", md: "40%" }} maxWidth={500}>
           <Card
             elevation={10}
             sx={{
@@ -79,7 +80,9 @@ function Home() {
     );
   }
 
-  // Info for display
+  const labelWidth = { xs: 90, sm: 130 };
+  const valueBoxWidth = { xs: "60vw", sm: 200 };
+
   const infoFields = [
     { label: "Age", value: profile.age },
     { label: "Phone Number", value: profile.phone },
@@ -94,36 +97,38 @@ function Home() {
     { label: "Gender", value: profile.gender },
   ];
 
-  // Styles for fields to match your screenshot
-  const labelWidth = 130;
-  const valueBoxWidth = 200;
-
   return (
     <Box
       sx={{
-        minHeight: "80vh",
+        minHeight: "30vh",
         bgcolor: "#123d7d",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         py: 6,
+        px: { xs: 2, sm: 4 },
       }}
     >
       <Card
         elevation={10}
         sx={{
           borderRadius: 4,
-          minWidth: 340,
+          width: { xs: "95%", sm: 400, md: 420 },
           maxWidth: 420,
           bgcolor: "#fff",
           px: { xs: 2, sm: 4 },
           py: { xs: 2, sm: 3 },
-          width: "100%",
         }}
       >
         <CardContent>
-          {/* Top Section: Avatar, Name, Email */}
-          <Box display="flex" flexDirection="column" alignItems="center" mb={2} mt={1}>
+          <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            mb={2}
+            mt={1}
+            sx={{ wordBreak: "break-word" }}
+          >
             <Avatar
               sx={{
                 bgcolor: "#1565c0",
@@ -141,6 +146,7 @@ function Home() {
               fontWeight={700}
               color="#003366"
               align="center"
+              sx={{ overflowWrap: "break-word" }}
             >
               {profile.name}
             </Typography>
@@ -148,59 +154,60 @@ function Home() {
               variant="h5"
               color="#444"
               align="center"
-              sx={{ mb: 1 }}
+              sx={{ mb: 1, overflowWrap: "break-word" }}
             >
               {profile.email}
             </Typography>
           </Box>
 
-          {/* Information fields aligned row by row */}
-          <Box sx={{ maxWidth: 370, mx: "auto", mt: 1 }}>
+          <Box sx={{ maxWidth: "100%", mx: "auto", mt: 1 }}>
             {infoFields.map((field) => (
               <Box
-  key={field.label}
-  sx={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    mb: 2.2,
-  }}
->
-  <Typography
-    sx={{
-      width: labelWidth,
-      textAlign: "left",
-      fontSize: 20,
-      color: "text.secondary",
-      fontWeight: 500,
-    }}
-  >
-    {field.label}
-  </Typography>
-  <Box
-    px={2}
-    py={1}
-    sx={{
-      background: "#e3ecfa",
-      borderRadius: 2,
-      width: valueBoxWidth,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",      // <--- here!
-      fontWeight: 500,
-      color: "#253858",
-    }}
-  >
-    <Typography variant="body1" fontWeight={500}>
-      {field.value}
-    </Typography>
-  </Box>
-</Box>
-
+                key={field.label}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-start",
+                  mb: 2.2,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Typography
+                  sx={{
+                    width: labelWidth,
+                    textAlign: "left",
+                    fontSize: 20,
+                    color: "text.secondary",
+                    fontWeight: 500,
+                    minWidth: 90,
+                  }}
+                >
+                  {field.label}
+                </Typography>
+                <Box
+                  px={2}
+                  py={1}
+                  sx={{
+                    background: "#e3ecfa",
+                    borderRadius: 2,
+                    width: valueBoxWidth,
+                    maxWidth: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: 500,
+                    color: "#253858",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  <Typography variant="body1" fontWeight={500} noWrap>
+                    {field.value || "-"}
+                  </Typography>
+                </Box>
+              </Box>
             ))}
           </Box>
 
-          {/* Edit Profile Button */}
           <Box textAlign="center" mt={4}>
             <Button
               variant="contained"
@@ -208,7 +215,7 @@ function Home() {
               sx={{
                 color: "primary",
                 borderColor: "#1565c0",
-                "&:hover": {  borderColor: "#003366" },
+                "&:hover": { borderColor: "#003366" },
                 fontWeight: 700,
               }}
             >
@@ -221,4 +228,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Home;  

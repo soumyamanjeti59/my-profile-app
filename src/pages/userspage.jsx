@@ -13,7 +13,8 @@ function UsersPage() {
         alignItems: "center",
         justifyContent: "center",
         py: 6,
-        width: "100%"
+        width: "100%",
+        px: { xs: 2, sm: 0 },
       }}
     >
       <Card
@@ -21,17 +22,16 @@ function UsersPage() {
         sx={{
           borderRadius: 7,
           bgcolor: "#fff",
-          minWidth: 340,
+          width: { xs: "95%", sm: 700 },
           maxWidth: 700,
           px: 3,
           py: 3,
-          width: "100%",
         }}
       >
         <CardContent>
-          <Box display="flex" alignItems="center" mb={2} gap={1}>
+          <Box display="flex" alignItems="center" mb={2} gap={1} flexWrap="wrap">
             <PeopleAltIcon sx={{ color: "#003366", fontSize: 28 }} />
-            <Typography variant="h5" fontWeight={700} color="#003366">
+            <Typography variant="h5" fontWeight={700} color="#003366" noWrap>
               Users List
             </Typography>
           </Box>
