@@ -1,4 +1,6 @@
+
 import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   TextField,
   Button,
@@ -17,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import PersonIcon from "@mui/icons-material/Person";
 
-// Helper: calculate age as of today from a "DD/MM/YYYY" string
+// Helper: calculate age from "DD/MM/YYYY" string
 function getAgeFromDOB(dobStr) {
   if (!dobStr || !dayjs(dobStr, "DD/MM/YYYY", true).isValid()) return "";
   const dob = dayjs(dobStr, "DD/MM/YYYY");
@@ -37,10 +39,10 @@ function getDOBFromAge(age) {
   const n = Number(age);
   if (!n || n <= 0) return "";
   const today = dayjs();
-  // Use today's month and day for DOB for greatest age accuracy
   return today.subtract(n, "year").format("DD/MM/YYYY");
 }
 
+// Helper for Avatar initials
 function stringAvatar(name) {
   if (!name) return { children: null };
   const parts = name.trim().split(" ");
@@ -52,34 +54,53 @@ function stringAvatar(name) {
   };
 }
 
-const EMAIL_VALIDATION_API_KEY = "21686e30d21542a1849db28cda4ea88d"; // Your API key here
+// Dummy email API key (replace with your own if necessary)
+const EMAIL_VALIDATION_API_KEY = "02762381af014a66ac1b9503c60b2565";
 
+// Email validation API
 async function validateEmailAPI(email) {
-  const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${EMAIL_VALIDATION_API_KEY}&email=${encodeURIComponent(
-    email
-  )}`;
+  const url = `https://api.zerobounce.net/v2/validate?api_key=${EMAIL_VALIDATION_API_KEY}&email=${email}`
   const response = await fetch(url);
   if (!response.ok) throw new Error("API request failed");
   const data = await response.json();
-  return data.deliverability === "DELIVERABLE";
+  return data.status === "valid";
 }
 
 function Profile() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: "",
-    age: "",
-    email: "",
-    phone: "",
-    dob: "",
-    gender: "",
-  });
+  const location = useLocation();
+
+  // Helper to get the latest user from localStorage
+  function getLatestUser() {
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    if (users.length === 0) return {
+      name: "",
+      age: "",
+      email: "",
+      phone: "",
+      dob: "",
+      gender: "",
+    };
+    return users[users.length - 1];
+  }
+
+  // If location.state?.edit, prefill, else empty
+  const [formData, setFormData] = useState(
+    location.state && location.state.edit ? getLatestUser() : {
+      name: "",
+      age: "",
+      email: "",
+      phone: "",
+      dob: "",
+      gender: "",
+    }
+  );
 
   const [errors, setErrors] = useState({});
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
 
-  // Handler for DOB field
+  // Handle DOB field
   const handleDOBChange = (date) => {
     let dobString = "";
     if (date && dayjs(date).isValid()) {
@@ -93,7 +114,7 @@ function Profile() {
     }));
   };
 
-  // Handler for Age field
+  // Handle Age field
   const handleAgeChange = (e) => {
     const val = e.target.value;
     let numericAge = val.replace(/\D/g, "");
@@ -113,7 +134,6 @@ function Profile() {
       newErrors.name = "Name is required";
     }
 
-    // Validate Age
     if (!formData.age || isNaN(formData.age) || Number(formData.age) <= 0) {
       newErrors.age = "Valid age required";
     }
@@ -127,7 +147,7 @@ function Profile() {
       newErrors.dob = "Valid past date required (DD/MM/YYYY)";
     }
 
-    // Validate Age-DOB sync
+    // Age-DOB sync
     if (
       !newErrors.age &&
       !newErrors.dob &&
@@ -157,12 +177,10 @@ function Profile() {
       setCheckingEmail(false);
     }
 
-    // Validate phone
     if (!formData.phone || !/^\d{10}$/.test(formData.phone)) {
       newErrors.phone = "Valid 10-digit phone required";
     }
 
-    // Validate gender
     if (!formData.gender) {
       newErrors.gender = "Gender is required";
     }
@@ -175,75 +193,77 @@ function Profile() {
     if (checkingEmail) return;
     const isValid = await validate();
     if (isValid) {
-      let profiles = JSON.parse(localStorage.getItem("userProfiles") || "[]");
-      profiles.push({
+      // ID assignment and save
+      let users = JSON.parse(localStorage.getItem("users") || "[]");
+      let nextId = 1;
+      if (users.length > 0) {
+        const ids = users.map((u) => u.id || 0);
+        nextId = Math.max(...ids) + 1;
+      }
+      const newUser = {
         ...formData,
         dob: formData.dob,
         age: formData.age,
-      });
-      localStorage.setItem("userProfiles", JSON.stringify(profiles));
+      };
+      users.push(newUser);
+      localStorage.setItem("users", JSON.stringify(users));
       setOpenSnackbar(true);
       setTimeout(() => {
         setOpenSnackbar(false);
-        navigate("/");
+        navigate("/"); // Redirect to Home page
       }, 1500);
     }
   };
 
   const fieldSx = {
     mb: 2,
-    bgcolor: "#f5f5f5",
-    "& .MuiInputBase-root": { height: 50 }
+    bgcolor: "#003366",
+    '& .MuiInputBase-root': { height: 50, color: '#e3ecfa', backgroundColor: '#003366' },
+    '& .MuiInputBase-input': { color: '#e3ecfa !important', backgroundColor: '#003366' },
+    '& .MuiFormLabel-root': { color: '#e3ecfa' },
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e3ecfa' },
   };
-  const labelSx = { fontSize: 18 };
+  const labelSx = { fontSize: 18, color: '#e3ecfa' };
 
   return (
     <Box
       sx={{
-        minHeight: "40vh",
+        minHeight: "100vh",
+        height: '100vh',
         bgcolor: "#123d7d",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        py: 6,
+        py: 0,
         px: { xs: 2, sm: 4 },
+        overflow: 'hidden',
       }}
     >
-      <Card
-        elevation={10}
-        sx={{
-          borderRadius: 4,
-          width: { xs: "95%", sm: 420 },
-          maxWidth: 420,
-          bgcolor: "#fff",
-          px: { xs: 2, sm: 4 },
-          py: { xs: 2, sm: 3 },
-        }}
-      >
-        <CardContent sx={{ pb: 1 }}>
-          <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
-            <Avatar
-              sx={{
-                width: 56,
-                height: 56,
-                mb: 2,
-                bgcolor: "#1565c0",
-                color: "#fff",
-                fontSize: 28,
-              }}
-            >
-              {formData.name ? stringAvatar(formData.name).children : <PersonIcon />}
-            </Avatar>
-            <Typography variant="h5" fontWeight={700} color="#003366" mb={1} align="center">
-              Profile Page
-            </Typography>
-          </Box>
-          <Box component="form" noValidate>
+      <Box sx={{ width: { xs: "100%", sm: 420 }, maxWidth: 420, mx: "auto" }}>
+        <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
+          <Avatar
+            sx={{
+              width: 56,
+              height: 56,
+              mb: 2,
+              bgcolor: "#1565c0",
+              color: "#fff",
+              fontSize: 28,
+              border: "2px solid #fff",
+            }}
+          >
+            {formData.name ? stringAvatar(formData.name).children : <PersonIcon />}
+          </Avatar>
+          <Typography variant="h5" fontWeight={700} color="#e3ecfa" mb={1} align="center">
+            Profile Page
+          </Typography>
+        </Box>
+        <Box component="form" noValidate>
             <TextField
               label="Name"
               fullWidth
               value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               error={!!errors.name}
               helperText={errors.name || ""}
               autoComplete="name"
@@ -256,7 +276,7 @@ function Profile() {
               label="Email"
               fullWidth
               value={formData.email}
-              onChange={e => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               error={!!errors.email}
               helperText={errors.email || ""}
               autoComplete="email"
@@ -292,7 +312,16 @@ function Profile() {
                   autoComplete="off"
                   required
                   InputLabelProps={{ shrink: true, sx: labelSx }}
-                  sx={{ bgcolor: "#f5f5f5", "& .MuiInputBase-root": { height: 50 } }}
+                  sx={{
+                    ...fieldSx,
+                    '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
+                      WebkitAppearance: 'none',
+                      margin: 0,
+                    },
+                    '& input[type=number]': {
+                      MozAppearance: 'textfield',
+                    },
+                  }}
                   disabled={checkingEmail}
                 />
                 <DatePicker
@@ -303,11 +332,19 @@ function Profile() {
                   slotProps={{
                     textField: {
                       fullWidth: true,
+                      variant: "outlined",
                       error: !!errors.dob,
                       helperText: errors.dob || "",
                       required: true,
-                      sx: { bgcolor: "#f5f5f5", "& .MuiInputBase-root": { height: 50 } },
-                      InputLabelProps: { shrink: true, sx: labelSx },
+                      sx: {
+                        ...fieldSx,
+                        '& .MuiSvgIcon-root': { color: '#fff' },
+                        '& .MuiOutlinedInput-notchedOutline': { borderColor: '#fff' },
+                      },
+                      InputLabelProps: {
+                        shrink: true,
+                        sx: labelSx,
+                      },
                       disabled: checkingEmail,
                     },
                   }}
@@ -319,22 +356,22 @@ function Profile() {
                 sx={{
                   display: "flex",
                   gap: 2,
-                  flexDirection: { xs: "column", sm: "row" },
                   width: "100%",
                   mb: 2,
                 }}
               >
                 <TextField
-                  label="Phone Number"
+                  label="Phone"
                   fullWidth
                   value={formData.phone}
-                  onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })
+                  }
                   error={!!errors.phone}
                   helperText={errors.phone || ""}
-                  autoComplete="tel"
                   required
-                  InputLabelProps={{ shrink: true, sx: labelSx }}
-                  sx={{ bgcolor: "#f5f5f5", "& .MuiInputBase-root": { height: 50 } }}
+                  sx={fieldSx}
+                  InputLabelProps={{ shrink: true, sx: { ...labelSx, color: "#fff" } }}
                   disabled={checkingEmail}
                 />
                 <TextField
@@ -342,12 +379,15 @@ function Profile() {
                   select
                   fullWidth
                   value={formData.gender}
-                  onChange={e => setFormData({ ...formData, gender: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                   error={!!errors.gender}
                   helperText={errors.gender || ""}
                   required
-                  InputLabelProps={{ shrink: true, sx: labelSx }}
-                  sx={{ bgcolor: "#f5f5f5", "& .MuiInputBase-root": { height: 50 } }}
+                  sx={{
+                    ...fieldSx,
+                    "& .MuiSelect-icon": { color: "#fff" },
+                  }}
+                  InputLabelProps={{ shrink: true, sx: { ...labelSx, color: "#fff" } }}
                   disabled={checkingEmail}
                 >
                   <MenuItem value="Male">Male</MenuItem>
@@ -356,20 +396,27 @@ function Profile() {
                 </TextField>
               </Box>
             </Box>
-            <Box textAlign="center" mt={3}>
-              <Button
-                variant="contained"
-                color="primary"
-                size="large"
-                onClick={handleSubmit}
-                sx={{ px: 5, bgcolor: "#1565c0" }}
-                disabled={checkingEmail}
-              >
-                Save Profile
-              </Button>
+            {checkingEmail && (
+              <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+                <CircularProgress size={24} />
+                <Typography sx={{ ml: 1, alignSelf: "center" }}>Validating email...</Typography>
+              </Box>
+            )}
+            <Box sx={{ flexGrow: 1 }}>
+              <Box textAlign="center" mt={3}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  onClick={handleSubmit}
+                  sx={{ px: 5, bgcolor: "#1565c0" }}
+                  disabled={checkingEmail}
+                >
+                  Save Profile
+                </Button>
+              </Box>
             </Box>
           </Box>
-        </CardContent>
         <Snackbar
           open={openSnackbar}
           autoHideDuration={2000}
@@ -380,7 +427,7 @@ function Profile() {
             Profile saved!
           </Alert>
         </Snackbar>
-      </Card>
+      </Box>
     </Box>
   );
 }

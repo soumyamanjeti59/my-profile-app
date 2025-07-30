@@ -9,9 +9,10 @@ import {
   CardContent,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import PersonIcon from "@mui/icons-material/Person";
 import dayjs from "dayjs";
+import PersonIcon from "@mui/icons-material/Person";
 
+// Helper for avatar letters
 function stringAvatar(name) {
   if (!name) return { children: <PersonIcon /> };
   const parts = name.trim().split(" ");
@@ -22,17 +23,17 @@ function stringAvatar(name) {
         : (parts[0][0] + parts[1][0]).toUpperCase(),
   };
 }
-
 function Home() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
 
+  // Read from "users" localStorage
   useEffect(() => {
-    const profilesJson = localStorage.getItem("userProfiles");
-    if (profilesJson) {
-      const profiles = JSON.parse(profilesJson);
-      if (profiles.length > 0) {
-        setProfile(profiles[profiles.length - 1]);
+    const usersJson = localStorage.getItem("users");
+    if (usersJson) {
+      const users = JSON.parse(usersJson);
+      if (users.length > 0) {
+        setProfile(users[users.length - 1]); // show latest user
       }
     }
   }, []);
@@ -100,27 +101,26 @@ function Home() {
   return (
     <Box
       sx={{
-        minHeight: "30vh",
+        minHeight: "100vh",
+        height: '100vh',
         bgcolor: "#123d7d",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        py: 6,
+        py: 0,
         px: { xs: 2, sm: 4 },
+        fontFamily: 'Roboto, Arial, Helvetica, sans-serif',
+        overflow: 'hidden',
       }}
     >
-      <Card
-        elevation={10}
+      <Box
         sx={{
-          borderRadius: 4,
           width: { xs: "95%", sm: 400, md: 420 },
           maxWidth: 420,
-          bgcolor: "#fff",
           px: { xs: 2, sm: 4 },
           py: { xs: 2, sm: 3 },
         }}
       >
-        <CardContent>
           <Box
             display="flex"
             flexDirection="column"
@@ -137,6 +137,7 @@ function Home() {
                 color: "#fff",
                 mb: 1,
                 fontSize: 28,
+                border: "2px solid #1565c0",
               }}
             >
               {profile.name ? stringAvatar(profile.name).children : <PersonIcon />}
@@ -144,17 +145,17 @@ function Home() {
             <Typography
               variant="h5"
               fontWeight={700}
-              color="#003366"
+              color="#fff"
               align="center"
-              sx={{ overflowWrap: "break-word" }}
+              sx={{ overflowWrap: "break-word", fontFamily: 'Roboto, Arial, Helvetica, sans-serif' }}
             >
               {profile.name}
             </Typography>
             <Typography
               variant="h5"
-              color="#444"
+              color="#e3ecfa"
               align="center"
-              sx={{ mb: 1, overflowWrap: "break-word" }}
+              sx={{ mb: 1, overflowWrap: "break-word", fontFamily: 'Roboto, Arial, Helvetica, sans-serif' }}
             >
               {profile.email}
             </Typography>
@@ -177,9 +178,10 @@ function Home() {
                     width: labelWidth,
                     textAlign: "left",
                     fontSize: 20,
-                    color: "text.secondary",
-                    fontWeight: 500,
+                    color: "#e3ecfa",
+                    fontWeight: 700,
                     minWidth: 90,
+                    fontFamily: 'Roboto, Arial, Helvetica, sans-serif',
                   }}
                 >
                   {field.label}
@@ -188,19 +190,19 @@ function Home() {
                   px={2}
                   py={1}
                   sx={{
-                    background: "#e3ecfa",
+                    background: "#003366",
                     borderRadius: 2,
                     width: valueBoxWidth,
                     maxWidth: "100%",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontWeight: 500,
-                    color: "#253858",
+                    fontWeight: 700,
+                    color: "#e3ecfa",
                     wordBreak: "break-word",
                   }}
                 >
-                  <Typography variant="body1" fontWeight={500} noWrap>
+                  <Typography variant="body1" fontWeight={700} noWrap sx={{ color: '#e3ecfa', fontFamily: 'Roboto, Arial, Helvetica, sans-serif' }}>
                     {field.value || "-"}
                   </Typography>
                 </Box>
@@ -211,21 +213,20 @@ function Home() {
           <Box textAlign="center" mt={4}>
             <Button
               variant="contained"
-              onClick={() => navigate("/profile")}
+              onClick={() => navigate("/profile", { state: { edit: true } })}
               sx={{
-                color: "primary",
-                borderColor: "#1565c0",
-                "&:hover": { borderColor: "#003366" },
+                bgcolor: "#1565c0",
+                color: "#fff",
                 fontWeight: 700,
+                "&:hover": { bgcolor: "#003366", color: "#fff" },
               }}
             >
               Edit Profile
             </Button>
           </Box>
-        </CardContent>
-      </Card>
+        </Box>
     </Box>
   );
 }
 
-export default Home;  
+export default Home;

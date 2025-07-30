@@ -25,55 +25,76 @@ function profileToUser(profile, idx) {
   };
 }
 
+
 function UsersTable() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(6);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
+    const fetchUsers = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Fetch all users from reqres.in API (all pages)
+        let apiUsers = [];
+        let pageNum = 1;
+        let totalPages = 1;
+        let totalApiCount = 0;
+        do {
+          const res = await fetch(`https://reqres.in/api/users?page=${pageNum}&per_page=100`, {
+            headers: { 'x-api-key': 'reqres-free-v1' }
+          });
+          if (!res.ok) throw new Error("API error");
+          const apiData = await res.json();
+          totalApiCount = apiData.total || 12;
+          totalPages = apiData.total_pages || 1;
+          const profiles = apiData.data.map((u) => ({
+            name: `${u.first_name} ${u.last_name}`,
+            email: u.email,
+            phone: u.phone || '-',
+            company: { name: "Hive Solutions" },
+          }));
+          apiUsers = apiUsers.concat(profiles.map((profile, idx) => profileToUser(profile, (pageNum-1)*100 + idx)));
+          pageNum++;
+        } while (pageNum <= totalPages);
 
-    try {
-      let profiles = [];
-      const profileArrJson = localStorage.getItem("userProfiles");
+        // Get local users from localStorage (from 'users' key)
+        let localProfiles = [];
+        try {
+          const local = JSON.parse(localStorage.getItem('users') || '[]');
+          if (Array.isArray(local)) {
+            localProfiles = local.map((profile, idx) => profileToUser(profile, apiUsers.length + idx));
+          }
+        } catch (e) {}
 
-      if (profileArrJson) {
-        profiles = JSON.parse(profileArrJson);
-      } else {
-        // Try legacy key fallback
-        const oldProfile = localStorage.getItem("profileData");
-        if (oldProfile) {
-          profiles = [JSON.parse(oldProfile)];
-          localStorage.setItem("userProfiles", JSON.stringify(profiles));
-        }
+        // Merge API users and local users
+        const allUsers = [...apiUsers, ...localProfiles];
+        setTotalCount(allUsers.length);
+
+        // Apply pagination to the combined list
+        const startIdx = page * rowsPerPage;
+        const endIdx = startIdx + rowsPerPage;
+        setUsers(allUsers.slice(startIdx, endIdx));
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to load users from API.");
+        setLoading(false);
       }
-
-      const profileUsers = profiles.map((profile, idx) =>
-        profileToUser(profile, idx)
-      );
-
-      setUsers(profileUsers);
-      setLoading(false);
-    } catch (err) {
-      setError("Failed to load users from local storage.");
-      setLoading(false);
-    }
-  }, []);
-
+    };
+    fetchUsers();
+  }, [page, rowsPerPage]);
   const handleChangePage = (event, newPage) => setPage(newPage);
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(+event.target.value);
     setPage(0);
   };
 
-  const visibleRows = users.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  // users is already paginated
+  const visibleRows = users;
 
   if (loading) {
     return (
@@ -131,7 +152,7 @@ function UsersTable() {
       <TablePagination
         rowsPerPageOptions={[5, 10, 15]}
         component="div"
-        count={users.length}
+        count={totalCount}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}
@@ -140,5 +161,6 @@ function UsersTable() {
     </Paper>
   );
 }
+  ;
 
 export default UsersTable;

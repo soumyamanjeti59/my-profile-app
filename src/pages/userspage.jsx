@@ -17,27 +17,22 @@ function UsersPage() {
         px: { xs: 2, sm: 0 },
       }}
     >
-      <Card
-        elevation={10}
+      <Box
         sx={{
-          borderRadius: 7,
-          bgcolor: "#fff",
           width: { xs: "95%", sm: 700 },
           maxWidth: 700,
           px: 3,
           py: 3,
         }}
       >
-        <CardContent>
-          <Box display="flex" alignItems="center" mb={2} gap={1} flexWrap="wrap">
-            <PeopleAltIcon sx={{ color: "#003366", fontSize: 28 }} />
-            <Typography variant="h5" fontWeight={700} color="#003366" noWrap>
-              Users List
-            </Typography>
-          </Box>
-          <UsersTable />
-        </CardContent>
-      </Card>
+        <Box display="flex" alignItems="center" mb={2} gap={1} flexWrap="wrap">
+          <PeopleAltIcon sx={{ color: "#e3ecfa", fontSize: 28 }} />
+          <Typography variant="h5" fontWeight={700} color="#e3ecfa" noWrap>
+            Users List
+          </Typography>
+        </Box>
+        <UsersTable />
+      </Box>
     </Box>
   );
 }

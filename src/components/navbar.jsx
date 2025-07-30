@@ -42,7 +42,6 @@ function Navbar() {
             HIVE
           </Typography>
         </Box>
-        {/* Buttons Aligned Right */}
         <Stack
           direction="row"
           spacing={1}
@@ -75,8 +74,6 @@ function Navbar() {
             color="primary"
             variant="contained"
             size="small"
-            component={Link}
-            to="/profile"
             sx={{
               backgroundColor: "#123d7d",
               color: "#fff",
@@ -86,6 +83,10 @@ function Navbar() {
               fontWeight: 700,
               letterSpacing: 1,
               whiteSpace: "nowrap"
+            }}
+            onClick={() => {
+              // Use window.location or useNavigate if you convert Navbar to a function component with hooks
+              window.location.href = '/profile';
             }}
           >
             PROFILE
