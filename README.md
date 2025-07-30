@@ -1,3 +1,33 @@
+# Project Setup Instructions
+
+## How to Run This Project
+
+1. **Install dependencies:**
+   - Run `npm install` in the project directory to install all required packages.
+2. **Start the development server:**
+   - Run `npm start` to launch the app in development mode. Open [http://localhost:3000](http://localhost:3000) in your browser.
+3. **Build for production:**
+   - Run `npm run build` to create a production build in the `build` folder.
+
+## Description of Approach
+
+- The app is built with React and Material-UI (MUI) for a modern, responsive UI.
+- User profile data is stored in `localStorage` for persistence across sessions.
+- The profile form uses MUI components and custom styling to match the blue/white theme.
+- The users list merges local users (from profile form) and API users (from reqres.in), with pagination.
+- Email validation is performed using the ZeroBounce API.
+- Navigation is handled with React Router.
+- The UI is designed to be clean, with form fields and info boxes styled for visual consistency.
+
+## Challenges Faced / Assumptions Made
+
+- **CORS for Email Validation:** Faced challanges when doing email validation as just regex validation will not verify delieverability and some of the free email validation API's do not support CORS. Used Zero Bounce API after considerable research.
+- **LocalStorage:** Assumes the browser supports `localStorage` and that users will not clear it between sessions.
+- **Styling Consistency:** Custom MUI `sx` props are used to ensure consistent color and spacing across pages.
+- **API Rate Limits:** The reqres.in API is used for demo purposes and may have rate limits.
+- **Responsiveness:** The layout uses MUI's responsive props to ensure usability on both desktop and mobile devices.
+- **Assumption:** Only one profile is shown at a time (the latest saved user).
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
