@@ -55,7 +55,7 @@ function stringAvatar(name) {
 }
 
 // Dummy email API key (replace with your own if necessary)
-const EMAIL_VALIDATION_API_KEY = "02762381af014a66ac1b9503c60b2565";
+const EMAIL_VALIDATION_API_KEY = "e9ef06013f0347ada9eb9788d6cde246";
 
 // Email validation API
 async function validateEmailAPI(email) {

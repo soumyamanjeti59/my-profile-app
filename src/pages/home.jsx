@@ -41,41 +41,45 @@ function Home() {
   if (!profile) {
     return (
       <Container
-        maxWidth="md"
+        disableGutters
+        maxWidth={false}
         sx={{
-          minHeight: "90vh",
+          minHeight: "100vh",
+          height: "100vh",
+          width: "100vw",
+          bgcolor: "#123d7d",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          bgcolor: "#123d7d",
-          px: { xs: 2, sm: 4 },
+          m: 0,
+          p: 0,
         }}
       >
-        <Box width={{ xs: "100%", sm: "50%", md: "40%" }} maxWidth={500}>
-          <Card
-            elevation={10}
-            sx={{
-              borderRadius: 4,
-              bgcolor: "#fff",
-              px: 3,
-              py: 4,
-              textAlign: "center",
-            }}
+        <Box
+          sx={{
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            bgcolor: "#123d7d",
+          }}
+        >
+          <Typography variant="h4" gutterBottom color="#fff" fontWeight={700}>
+            No profile found
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 3, color: "#e3ecfa" }}>
+            Complete your profile to see your details here.
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => navigate("/profile")}
+            sx={{ bgcolor: "#1565c0", color: "#fff", fontWeight: 700, px: 4, py: 1.5, fontSize: 18, borderRadius: 2, '&:hover': { bgcolor: '#003366' } }}
           >
-            <Typography variant="h5" gutterBottom>
-              No profile found
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 3 }}>
-              Complete your profile to see your details here.
-            </Typography>
-            <Button
-              variant="contained"
-              onClick={() => navigate("/profile")}
-              sx={{ bgcolor: "#123d7d" }}
-            >
-              Go to Profile
-            </Button>
-          </Card>
+            Go to Profile
+          </Button>
         </Box>
       </Container>
     );
